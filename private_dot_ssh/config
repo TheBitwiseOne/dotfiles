@@ -1,0 +1,11 @@
+Host github-deepframe
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_deepframe
+    IdentitiesOnly yes
+
+Host github-thebitwiseone
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_ed25519_thebitwiseone
+    IdentitiesOnly yes
