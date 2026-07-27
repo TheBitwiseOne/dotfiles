@@ -1,0 +1,12 @@
+[mgr]
+
+show_hidden = true
+show_symlink = true
+
+[opener]
+mupdf = [
+  { run = 'mupdf "$@"', orphan = true, block = false, desc = "mupdf", for = "linux" },
+]
+
+[open]
+prepend_rules = [{ mime = "application/pdf", use = "mupdf" }]
