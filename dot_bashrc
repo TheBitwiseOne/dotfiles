@@ -1,0 +1,260 @@
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+source /usr/share/git/completion/git-prompt.sh
+
+alias cat='bat --style header --style snip --style changes --style header'
+alias continue='ani-cli --dub -c'
+# alias continue='anipy-cli -H'
+alias ga='git add'
+alias gc='git commit -m'
+alias gl='git log --oneline --graph --decorate'
+alias gp='git push'
+alias grep='ugrep --color=auto'
+alias gs='git status'
+alias jctl='journalctl -p 3 -xb'
+alias la='exa -a --color=always --group-directories-first --icons' # all files and dirs
+alias lastBootLog='journalctl -p 3..4 --boot -o short-monotonic | uniq'
+alias ll='exa -l --color=always --group-directories-first --icons' # long format
+alias logout="loginctl terminate-user $USER"
+alias ls='exa -al --color=always --group-directories-first --icons' # preferred listing
+alias lt='exa -aT --color=always --group-directories-first --icons' # tree listing
+alias makeExec='chmod +x'
+alias off='shutdown -h now'
+alias pacFind='pacman -Ss'
+alias savePkgLists="pacman -Qqe | grep -vxF -f <(pacman -Qqm) | grep -v '^yay$' > $HOME/Downloads/official_packages.txt && pacman -Qqm | grep -v '^yay$' > $HOME/Downloads/aur_packages.txt"
+alias take="sudo chown -R $USER:$USER"
+alias tattach='tmux attach -t'
+alias tdetach='tmux detach'
+alias tkill='tmux kill-session -t'
+alias tls='tmux ls'
+alias tnew='tmux new -s'
+alias updateMirrorList='sudo reflector --verbose --latest 200 --sort rate --country za --save /etc/pacman.d/mirrorlist'
+alias watch='ani-cli --dub'
+# alias watch='anipy-cli'
+alias wget='wget -c'
+alias yayFind='yay -Ss'
+
+export SUDO_PROMPT="$(tput bold)Please provide your sudo password:$(tput sgr0) "
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+export VISUAL=nvim
+export EDITOR=nvim
+export OLLAMA_API_BASE=http://127.0.0.1:11434
+
+virtualenv_info() {
+  if [[ -n "$VIRTUAL_ENV" ]]; then
+    echo " ◀[$(basename "$VIRTUAL_ENV") - $(basename "$(dirname "$VIRTUAL_ENV")")]▶"
+  fi
+}
+
+FOREGROUND="\[\e[38;2;255;248;220m\]"
+ORANGE="\[\e[38;2;205;127;50m\]"
+WHITE="\[\e[38;2;255;255;255m\]"
+RESET="\[\e[m\]"
+
+PS1="${WHITE}╭─◀[\A]▶${RESET} ${WHITE}◀[\w]▶${RESET}\$(__git_ps1 \" ${WHITE}◀[ %s]▶\")\$(virtualenv_info)${RESET}\n${WHITE}╰─λ${RESET}${WHITE} "
+
+shopt -s expand_aliases
+
+compress() {
+
+  # -----------------------------------------------------------------------------
+  # compress - Create a .tar.gz archive from a file or directory for SSH transfer
+  #
+  # USAGE:
+  #   tarsend /path/to/file_or_dir
+  #
+  # ARGUMENTS:
+  #   $1 - Path to the file or directory to compress
+  #
+  # DESCRIPTION:
+  #   - Creates a compressed .tar.gz archive of the specified file or directory.
+  #   - The archive is named using the base name of the target (e.g., myfolder.tar.gz).
+  #   - Useful for preparing files to transfer over SSH.
+  #
+  # EXAMPLE:
+  #   tarsend ~/projects/myapp
+  #   # Produces myapp.tar.gz in the current directory
+  #
+  # TO SEND OVER SSH:
+  #   rsync -avz myapp.tar.gz user@host:/remote/path/
+  # -----------------------------------------------------------------------------
+
+  local SRC="$1"
+
+  if [[ -z "$SRC" ]]; then
+    echo "Usage: tarsend /path/to/file_or_directory"
+    return 1
+  fi
+
+  if [[ ! -e "$SRC" ]]; then
+    echo "Error: '$SRC' does not exist"
+    return 1
+  fi
+
+  local BASENAME
+  BASENAME="$(basename "$SRC")"
+  local ARCHIVE="${BASENAME}.tar.gz"
+
+  echo "📦 Creating archive: $ARCHIVE"
+  tar -czf "$ARCHIVE" -C "$(dirname "$SRC")" "$BASENAME"
+
+  echo "✅ Archive created: $ARCHIVE"
+  echo "➡️  To send via SSH:"
+  echo "   rsync -avz $ARCHIVE user@host:/remote/path/"
+}
+
+extract() {
+
+  # -----------------------------------------------------------------------------
+  # extract - Extract compressed archive files based on file extension
+  #
+  # USAGE:
+  #   extract <archive_file>
+  #
+  # ARGUMENTS:
+  #   $1 - The compressed archive file to extract
+  #
+  # DESCRIPTION:
+  #   - Supports common formats like .tar.gz, .zip, .rar, .7z, etc.
+  #   - Automatically chooses the correct extraction tool based on extension.
+  #   - Shows an error message if the format is unsupported or file is missing.
+  # -----------------------------------------------------------------------------
+
+  if [ -f "$1" ]; then
+    case "$1" in
+    *.tar.bz2) tar xjf "$1" ;;
+    *.tar.gz) tar xzf "$1" ;;
+    *.tar.xz) tar xJf "$1" ;;
+    *.bz2) bunzip2 "$1" ;;
+    *.rar) unrar x "$1" ;;
+    *.gz) gunzip "$1" ;;
+    *.tar) tar xf "$1" ;;
+    *.tbz2) tar xjf "$1" ;;
+    *.tgz) tar xzf "$1" ;;
+    *.zip) unzip "$1" ;;
+    *.7z) 7z x "$1" ;;
+    *) echo "'$1' cannot be extracted via extract()" ;;
+    esac
+  else
+    echo "'$1' is not a valid file"
+  fi
+
+}
+
+hunt() {
+
+  # -----------------------------------------------------------------------------
+  # s - Search for package remnants
+  #
+  # USAGE:
+  #   s <name>
+  #
+  # DESCRIPTION:
+  #   - Searches common locations for files and directories matching a name.
+  #   - Intended for finding leftovers after uninstalling software.
+  #   - Case-insensitive.
+  # -----------------------------------------------------------------------------
+
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: hunt <name>"
+    return 1
+  fi
+
+  sudo find \
+    /etc \
+    /usr \
+    /opt \
+    /var \
+    /home \
+    -iname "*$1*" \
+    2>/dev/null
+}
+
+writeiso() {
+
+  # -----------------------------------------------------------------------------
+  # writeiso - Safely write a bootable ISO to a USB device using dd
+  #
+  # USAGE:
+  #   writeiso /path/to/file.iso /dev/sdX
+  #
+  # ARGUMENTS:
+  #   $1 - Path to the ISO file (e.g., ~/Downloads/archlinux-*.iso)
+  #   $2 - Target device (e.g., /dev/sdb — not a partition like /dev/sdb1)
+  #
+  # DESCRIPTION:
+  #   - Automatically unmounts all mounted partitions on the target device.
+  #   - Uses dd with optimal options for performance and safety.
+  #   - Displays progress and syncs writes to reduce corruption risk.
+  #
+  # HOW TO FIND YOUR USB DEVICE:
+  #   Run: lsblk
+  #   Look for your USB stick based on size and name.
+  #   Example output:
+  #     sdb      8:16   1   7.5G  0 disk
+  #     └─sdb1   8:17   1   7.5G  0 part /run/media/clinton/ARCH_*
+  #   In this case, the correct target is /dev/sdb
+  # -----------------------------------------------------------------------------
+
+  local ISO="$1"
+  local TARGET="$2"
+
+  if [[ -z "$ISO" || -z "$TARGET" ]]; then
+    echo "Usage: writeiso /path/to/iso /dev/sdX"
+    return 1
+  fi
+
+  if [[ ! -f "$ISO" ]]; then
+    echo "Error: ISO file not found at $ISO"
+    return 1
+  fi
+
+  if [[ ! -b "$TARGET" ]]; then
+    echo "Error: Target $TARGET is not a block device"
+    return 1
+  fi
+
+  echo "🔍 Unmounting partitions on $TARGET..."
+  for part in $(lsblk -ln "$TARGET" | awk '{print $1}'); do
+    sudo umount "/dev/$part" 2>/dev/null
+  done
+
+  echo "⚠️ Writing $ISO to $TARGET with dd..."
+  sudo dd bs=4M if="$ISO" of="$TARGET" status=progress oflag=sync
+
+  echo "✅ Done. You may now eject the device:"
+  echo "   sudo eject $TARGET"
+}
+
+y() {
+
+  # -----------------------------------------------------------------------------
+  # y - Launch yazi file manager and change shell directory on exit
+  #
+  # USAGE:
+  #   y [<yazi_args>...]
+  #
+  # DESCRIPTION:
+  #   - Launches yazi file manager.
+  #   - Captures the final working directory from yazi.
+  #   - Changes the shell’s current directory to match yazi’s on exit.
+  #   - Uses a temporary file to store the working directory path.
+  # -----------------------------------------------------------------------------
+
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+  yazi "$@" --cwd-file="$tmp"
+  IFS= read -r -d '' cwd <"$tmp"
+  [ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+  rm -f -- "$tmp"
+}
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+
+export PATH="$HOME/.local/bin:$PATH"
