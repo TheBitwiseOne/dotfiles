@@ -1,0 +1,35 @@
+return {
+  "obsidian-nvim/obsidian.nvim",
+  version = "*", -- use latest release, remove to use latest commit
+  ui = { enable = false },
+  keys = {
+    { "<leader>ob", "<cmd>Obsidian backlinks<CR>", desc = "Obsidian backlinks" },
+    { "<leader>od", "<cmd>Obsidian today<CR>", desc = "Obsidian daily note" },
+    { "<leader>ol", "<cmd>Obsidian links<CR>", desc = "Obsidian note links" },
+    { "<leader>oo", "<cmd>Obsidian open<CR>", desc = "Open in Obsidian" },
+    { "<leader>oq", "<cmd>Obsidian quick_switch<CR>", desc = "Obsidian quick switch" },
+    { "<leader>os", "<cmd>Obsidian search<CR>", desc = "Search Obsidian notes" },
+    { "<leader>ot", "<cmd>Obsidian template<CR>", desc = "Insert Obsidian template" },
+    { "<leader>oT", "<cmd>Obsidian toc<CR>", desc = "Obsidian table of contents" },
+  },
+  ---@module 'obsidian'
+  ---@type obsidian.config
+  opts = {
+    legacy_commands = false, -- this will be removed in 4.0.0
+
+    workspaces = {
+      {
+        name = "obsidian_vault",
+        path = "~/obsidian_vault/",
+      },
+    },
+    ---@class obsidian.config.DailyNotesOpts
+    daily_notes = {
+      enabled = true,
+      folder = "daily_notes",
+      date_format = "YYYY-MM-DD",
+      alias_format = nil,
+      default_tags = { "daily-notes" },
+    },
+  },
+}

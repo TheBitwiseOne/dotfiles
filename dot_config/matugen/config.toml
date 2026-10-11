@@ -1,0 +1,41 @@
+[config]
+
+[config.wallpaper]
+set = false
+command = "true"
+
+[templates.kitty]
+input_path = "~/.config/matugen/templates/kitty.conf"
+output_path = "~/.config/kitty/colors.conf"
+
+[templates.hyprland]
+input_path = "~/.config/matugen/templates/hyprland.lua"
+output_path = "~/.config/hypr/colors.lua"
+
+[templates.swaync]
+input_path = "~/.config/matugen/templates/swaync.css"
+output_path = "~/.config/swaync/colors.css"
+
+[templates.hyprtoolkit]
+input_path = "~/.config/matugen/templates/hyprtoolkit.conf"
+output_path = "~/.config/hypr/hyprtoolkit.conf"
+
+[templates.qt6ct]
+input_path = "~/.config/matugen/templates/qt6ct.conf"
+output_path = "~/.config/qt6ct/colors/matugen.conf"
+
+[templates.gtk3]
+input_path = "~/.config/matugen/templates/gtk3.css"
+output_path = "~/.config/gtk-3.0/colors.css"
+
+[templates.gtk4]
+input_path = "~/.config/matugen/templates/gtk4.css"
+output_path = "~/.config/gtk-4.0/colors.css"
+
+[templates.nvim]
+input_path = "~/.config/matugen/templates/nvim.lua"
+output_path = "~/.config/nvim/lua/config/wallpaper_palette.lua"
+
+[templates.btop]
+input_path = "~/.config/matugen/templates/btop.theme"
+output_path = "~/.config/btop/themes/matugen.theme"

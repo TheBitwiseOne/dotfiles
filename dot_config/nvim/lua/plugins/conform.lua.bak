@@ -1,0 +1,20 @@
+return {
+  "stevearc/conform.nvim",
+  opts = {
+    -- 1. Map SQL files to use pg_format (the actual built-in name)
+    formatters_by_ft = {
+      sql = { "pg_format" },
+    },
+    -- 2. Configure pg_format with your existing cwd logic
+    formatters = {
+      pg_format = {
+        -- Keep your existing cwd configuration
+        cwd = function()
+          return vim.fn.getcwd()
+        end,
+        -- Set indentation to 2 spaces (remove this line if you prefer the default 4 spaces)
+        args = { "--spaces", "2" },
+      },
+    },
+  },
+}

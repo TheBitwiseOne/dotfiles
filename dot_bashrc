@@ -5,11 +5,24 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-source /usr/share/git/completion/git-prompt.sh
+ENV_FILE="$HOME/.env"
 
+if [ -f ~/.env ]; then
+  set -a
+  source "$ENV_FILE"
+  set +a
+fi
+source /usr/share/git/completion/git-prompt.sh
+#dannie######################################
+alias ebc='nvim ~/.bashrc'
+alias sbc='source ~/.bashrc'
+#############################################
+alias ai='aider --watch-files'
+# alias ai='aider --model ollama_chat/qwen2.5-coder:7b --chat-mode ask --watch-files --multiline'
 alias cat='bat --style header --style snip --style changes --style header'
 alias continue='ani-cli --dub -c'
 # alias continue='anipy-cli -H'
+alias cm='chezmoi'
 alias ga='git add'
 alias gc='git commit -m'
 alias gl='git log --oneline --graph --decorate'
@@ -17,12 +30,12 @@ alias gp='git push'
 alias grep='ugrep --color=auto'
 alias gs='git status'
 alias jctl='journalctl -p 3 -xb'
-alias la='exa -a --color=always --group-directories-first --icons' # all files and dirs
+alias la='eza -a --color=always --group-directories-first --icons always' # all files and dirs
 alias lastBootLog='journalctl -p 3..4 --boot -o short-monotonic | uniq'
-alias ll='exa -l --color=always --group-directories-first --icons' # long format
+alias ll='eza -l --color=always --group-directories-first --icons always' # long format
 alias logout="loginctl terminate-user $USER"
-alias ls='exa -al --color=always --group-directories-first --icons' # preferred listing
-alias lt='exa -aT --color=always --group-directories-first --icons' # tree listing
+alias ls='eza -al --color=always --group-directories-first --icons always' # preferred listing
+alias lt='eza -aT --color=always --group-directories-first --icons always' # tree listing
 alias makeExec='chmod +x'
 alias off='shutdown -h now'
 alias pacFind='pacman -Ss'
@@ -51,12 +64,16 @@ virtualenv_info() {
   fi
 }
 
-FOREGROUND="\[\e[38;2;255;248;220m\]"
-ORANGE="\[\e[38;2;205;127;50m\]"
-WHITE="\[\e[38;2;255;255;255m\]"
-RESET="\[\e[m\]"
+# FOREGROUND="\[\e[38;2;255;248;220m\]"
+# ORANGE="\[\e[38;2;205;127;50m\]"
+# WHITE="\[\e[38;2;255;255;255m\]"
+# BLUE="\[\e[38;2;13;115;204m\]"
+# RESET="\[\e[m\]"
 
-PS1="${WHITE}╭─◀[\A]▶${RESET} ${WHITE}◀[\w]▶${RESET}\$(__git_ps1 \" ${WHITE}◀[ %s]▶\")\$(virtualenv_info)${RESET}\n${WHITE}╰─λ${RESET}${WHITE} "
+# PS1="${BLUE}╭─◀[\A]▶${RESET} ${BLUE}◀[\w]▶${RESET}\$(__git_ps1 \" ${BLUE}◀[ %s]▶\")\$(virtualenv_info)${RESET}\n${BLUE}╰─λ${RESET}${WHITE} "
+PS1="╭─◀[\A]▶ ◀[\w]▶\$(__git_ps1 \" ◀[ %s]▶\")\$(virtualenv_info)\n╰─λ "
+
+PS1='\[\e[36m\]'"$PS1"'\[\e[0m\]'
 
 shopt -s expand_aliases
 
@@ -106,6 +123,88 @@ compress() {
   echo "✅ Archive created: $ARCHIVE"
   echo "➡️  To send via SSH:"
   echo "   rsync -avz $ARCHIVE user@host:/remote/path/"
+}
+
+dev_services_start() {
+
+  # -----------------------------------------------------------------------------
+  # dev_services_start - Start Docker and Ollama development services
+  #
+  # USAGE:
+  #   dev_services_start
+  #
+  # DESCRIPTION:
+  #   - Starts containerd, the Docker socket, the Docker daemon, and Ollama.
+  #   - Does not enable any of these services at boot.
+  #   - May restore containers configured with an automatic restart policy.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl start \
+    containerd.service \
+    docker.socket \
+    docker.service \
+    ollama.service
+}
+
+dev_services_stop() {
+
+  # -----------------------------------------------------------------------------
+  # dev_services_stop - Stop and disable Docker and Ollama services
+  #
+  # USAGE:
+  #   dev_services_stop
+  #
+  # DESCRIPTION:
+  #   - Stops Docker, its supporting services, and Ollama.
+  #   - Disables all associated units to prevent startup at boot.
+  #   - Run `npx supabase stop` first when local Supabase is active.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl disable --now \
+    docker.service \
+    docker.socket \
+    containerd.service \
+    ollama.service
+}
+
+docker_start() {
+
+  # -----------------------------------------------------------------------------
+  # docker_start - Start Docker and its supporting services
+  #
+  # USAGE:
+  #   docker_start
+  #
+  # DESCRIPTION:
+  #   - Starts containerd, the Docker socket, and the Docker daemon.
+  #   - Does not enable these services at boot.
+  #   - May restore containers configured with an automatic restart policy.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl start \
+    containerd.service \
+    docker.socket \
+    docker.service
+}
+
+docker_stop() {
+
+  # -----------------------------------------------------------------------------
+  # docker_stop - Stop and disable Docker and its supporting services
+  #
+  # USAGE:
+  #   docker_stop
+  #
+  # DESCRIPTION:
+  #   - Stops the Docker daemon, Docker socket, and containerd.
+  #   - Disables all three units to prevent automatic startup at boot.
+  #   - Run `npx supabase stop` first when local Supabase is active.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl disable --now \
+    docker.service \
+    docker.socket \
+    containerd.service
 }
 
 extract() {
@@ -173,6 +272,38 @@ hunt() {
     /home \
     -iname "*$1*" \
     2>/dev/null
+}
+
+ollama_start() {
+
+  # -----------------------------------------------------------------------------
+  # ollama_start - Start the Ollama service
+  #
+  # USAGE:
+  #   ollama_start
+  #
+  # DESCRIPTION:
+  #   - Starts the Ollama service for the current session.
+  #   - Does not enable Ollama at boot.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl start ollama.service
+}
+
+ollama_stop() {
+
+  # -----------------------------------------------------------------------------
+  # ollama_stop - Stop and disable the Ollama service
+  #
+  # USAGE:
+  #   ollama_stop
+  #
+  # DESCRIPTION:
+  #   - Stops the Ollama service.
+  #   - Disables Ollama to prevent automatic startup at boot.
+  # -----------------------------------------------------------------------------
+
+  sudo systemctl disable --now ollama.service
 }
 
 writeiso() {
@@ -258,3 +389,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
 
 export PATH="$HOME/.local/bin:$PATH"
+
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+export PATH="$HOME/.cargo/bin:$PATH"

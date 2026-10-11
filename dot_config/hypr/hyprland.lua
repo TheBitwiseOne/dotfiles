@@ -33,7 +33,6 @@ hl.monitor({
 -- Set programs that you use
 local terminal = "kitty"
 local fileManager = "kitty -e yazi"
-local agent = "kitty -e hermes"
 local menu = "hyprlauncher"
 local browser = "thorium-browser"
 
@@ -55,13 +54,14 @@ local browser = "thorium-browser"
 hl.on("hyprland.start", function()
 	hl.exec_cmd("systemctl --user start hyprpolkitagent &")
 	hl.exec_cmd("hyprpaper &")
-	hl.exec_cmd(agent, { workspace = 2 })
 	hl.exec_cmd(terminal, { workspace = 1 })
 	hl.exec_cmd("swaync &")
 	hl.exec_cmd("udiskie &")
 	hl.exec_cmd("hyprlauncher -d &")
 	hl.exec_cmd("nm-applet &")
 	hl.exec_cmd("blueman-applet &")
+	hl.exec_cmd("syncthing --no-browser &")
+	hl.exec_cmd("waypaper --restore")
 end)
 
 -------------------------------
@@ -105,10 +105,10 @@ hl.env("HYPRCURSOR_SIZE", "24")
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
 	general = {
-		gaps_in = 5,
+		gaps_in = 3,
 		gaps_out = 5,
 
-		border_size = 2,
+		border_size = 1,
 
 		col = {
 			active_border = { colors = { "rgba(33ccffee)", "rgba(00ff99ee)" }, angle = 45 },
@@ -125,14 +125,14 @@ hl.config({
 	},
 
 	decoration = {
-		rounding = 10,
+		rounding = 5,
 		rounding_power = 2,
 
 		-- Change transparency of focused and unfocused windows
 		active_opacity = 1.0,
 		inactive_opacity = 1.0,
 
-		dim_inactive = true,
+		dim_inactive = false,
 		dim_strength = 0.3,
 
 		shadow = {
@@ -283,19 +283,22 @@ hl.bind("SUPER + Print", hl.dsp.exec_cmd('grim -g "$(slurp -d)" - | wl-copy'))
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(browser, { workspace = 3 }))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(browser, { workspace = 2 }))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
 hl.bind(
 	mainMod .. " + M",
 	hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'")
 )
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager, { workspace = 4 }))
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager, { workspace = 3 }))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind("CTRL + ALT + S", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + grave", hl.dsp.window.fullscreen({ action = "toggle" }))
+hl.bind("CTRL + grave", hl.dsp.exec_cmd("waypaper --random"))
+hl.bind("CTRL + SHIFT + grave", hl.dsp.exec_cmd("waypaper --restore"))
+hl.bind("SUPER + N", hl.dsp.exec_cmd("swaync-client --toggle-panel --skip-wait"))
 
 hl.bind("SUPER + G", function()
 	local game_mode = (hl.get_config("animations.enabled") == false)
@@ -468,3 +471,5 @@ hl.window_rule({
 	move = "20 monitor_h-120",
 	float = true,
 })
+
+dofile(os.getenv("HOME") .. "/.config/hypr/colors.lua")
